@@ -1,0 +1,118 @@
+---
+title: "Exponential Distribution Test"
+author: "Victor"
+date: "September 21, 2016"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
+
+## Introduction
+
+In this short paper we will look at how the sample mean and standard deviation of the exponential distribution compare to its theoretical mean and standard deviation. We will also look at how the means of normalized large samples of independent and identically distributed variables become approximately normally distributed. In our analysis we will perform 10000 simulations of the means of 40 exponentially distributed iid variables.
+
+## Experiment set-up
+
+An exponential distribution takes one parameter, lambda. The mean and standard deviation of the exponential distribution are 1/lambda. for our experiment we will set lambda as .2 making our theoretical mean and standard deviation 5. 
+The process we will use to estimate our sample mean and standard deviation will be: calculate 40 exponentially distributed variable with parameter lambda = .2 and then taking the mean and standard deviation of these 40 variables. We will repeat this process 10000 times in order properly see the convergence of our sample mean and standard deviation.
+
+```{r cars}
+set.seed(512) #set seed to allow for reproducible results
+
+## define the parameters of the experiment
+n = 40 
+lambda = .2
+num_sim = 10000
+mu = 1/lambda
+sigma = 1/lambda
+
+## simulation code (generating 10000 means of exponentially distributed variables)
+mns = NULL
+for (i in 1:num_sim) mns = c(mns, mean(rexp(n,lambda)))
+summary(mns)
+
+```
+
+## Sample Mean vs. Theoretical Mean
+
+We said earlier that our parameter lambda = .2, this means that our theoretical mean is 5. from the summary view of our simulation we observe that the mean is: 
+```{r, echo=FALSE }
+round(mean(mns), 4)
+```
+We can conclude that this our simulation is pretty accurate because our sample mean is off by:
+```{r, echo=FALSE }
+round(mean(mns), 4) - mu
+```
+We can arrive at the same conclusion by plotting our data and highlighting our sample mean the theoretical mean
+
+```{r pressure, echo=FALSE}
+
+dat = as.data.frame(mns)
+q = ggplot(data = dat, aes(x = mns)) +
+  geom_histogram(binwidth = .5, color="gray") +
+  geom_vline(xintercept = mean(mns),color = "green",size = 1.5) +
+  geom_vline(xintercept = mu, color = "red",size =1)+
+  labs(title = "Sample Mean vs Theoretical Mean",x = "Mean of 40 exponentially distributed variables", y = "Frequency")
+q
+```
+
+## Sample Standard Deviation vs. Theoretical Standard Deviation
+
+We said earlier that our parameter lambda = .2, this means that our theoretical standard deviation is 5. Although the theoretical standard deviation is 5, we expect our standard deviation to be a lot smaller because our standard deviation is the deviation between 10000 means of 40 exponentially distributed variables.
+Our sample standard deviation is:
+```{r, echo=FALSE }
+sqrt(var(mns))
+```
+As we thought our sample standard deviation is a lot smaller than the theoretical standard deviation.
+
+## Normallity of our sample
+
+Here, we will show that our sample follows a normal distribution. We will start of by standardizing our sample using the the formula:
+(X-mu)/std_error.
+
+- X is our sample observations.
+- mu is our theoretical mean.
+- std_error is the theoretical standard deviation divided the square of the sample size (n = 40).
+
+```{r, echo=FALSE}
+X = mns
+mu = 1/lambda
+std_error = 1/lambda/sqrt(40)
+std_variables = (X-mu)/std_error
+dat2 = as.data.frame(std_variables)
+```
+The observed standardized mean of our sample is:
+```{r,echo=FALSE}
+mean(std_variables)
+```
+The observed standardized variance of our sample is:
+```{r,echo=FALSE}
+mean(std_variables)
+```
+These are approximatelly 0 and 1 both parameters of the standard normal.
+
+To better visualize the normallity of our sample we can overlay a histogram of our standardized sample with a standard normal plot.
+
+```{r, echo=FALSE}
+
+q <- ggplot(data = dat2, aes(x = std_variables)) + 
+  geom_histogram( binwidth = 0.5, color = "gray", aes(y = ..density..)) +
+  labs(title = "Normalized Exponential Distribution", x = "Mean of 40 exponentially distributed variables", y = "Frequency") + 
+  stat_function(fun = dnorm, size = 2)
+
+q
+```
+
+
+
+
+
+
+
+
+
+
+
