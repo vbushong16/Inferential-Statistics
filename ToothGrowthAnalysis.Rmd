@@ -1,0 +1,88 @@
+---
+title: "Basic Inferential Data Analysis"
+author: "Victor"
+date: "September 21, 2016"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## ToothGrowth analysis
+
+In this analysis we are looking to make some inference based on the ToothGrowth data set provided in the datasets package. The ToothGrowth data shows the effect of Vitamin C on tooth growth. We observe to method to deliver the vitamin C (supplement 1: Orange Juice and supplement 2: ascorbic acid). The study was made at various level of delivered Vitamin C (.5,1 and 2 mg). We observe in our analysis that at higher levels (2mg) of supplement the delivery method doesn't have an impact. At lower levels (.5 and 1mg) we observe a significant difference between the impact of Vitamin C from orange juice versus ascorbic acid. 
+
+## The data and exploratory analysis
+
+We want to understand more about our data and its structure. To do so we use the str() and summary() commands in r. 
+```{r cars}
+library(datasets)
+TG = ToothGrowth
+str(TG)
+summary(TG)
+```
+We can see that this data set is made up of 60 observations of 3 variables. The data structure is 2 numerical variables and one factor variable. we see from the summary of the data set that the factor level are: OJ and AC, the first numerical variable len ranges from 4.2 to 33.9 and the second numerical variable (dose) ranges from 0.5 to 2. 
+
+In this first part of the analysis we are going to see if there is a significant difference in the mean length growth for subjects taking orange juice versus subjects taking ascorbic acid
+
+```{r, echo=FALSE}
+library(ggplot2)
+qplot(supp, len,data = TG, geom = "boxplot",
+      main = "Length by supp", xlab = "Supplement",
+      ylab = "Length")
+```
+
+From the plot it is unclear if there is a significant difference is mean between the 2 groups. We will proceed to perform a t-test to see if the observe difference is significant.
+
+```{r, echo=FALSE}
+grouping <- t.test(len ~ supp,data = TG, var.equal = FALSE)
+print(grouping)
+```
+
+Our test fails to reject the null hypothesis. Therefore we can say there is not enough evidence to show that the mean tooth lengths for subjects taking orange juice is different to subjects taking ascorbic acid.
+Although there isn't enough evidence to dissociate the 2 groups, we found our p-value to be 0.06063 which is really close to the rejection region at alpha = 0.95. 
+
+We then look at the sub-groupings between subjects taking orange juice and ascorbic acid. these 2 groups can be divide into subjects taknig 0.5,1 and 2mg of vitamin C through one of the two delivery method.
+
+Our preliminary grahpical analysis shows the break down of each dosage levels by subject groups:
+
+```{r, echo=FALSE}
+qplot(supp, len,data = TG, geom = "boxplot", facets = ~dose, 
+      main = "Length by supp", xlab = "Supplement",
+      ylab = "Length")
+```
+
+At first glanced it looks like at dosage level 0.5 and 1 mg of Vitamin C the delivery method has a significant impact on tooth growth. At 2mg it is unclear that the delivery impacts tooth growth. 
+
+We will perform t-tests in order to see if there is enough evidence to back-up our claims from the graphical analysis. 
+
+
+```{r, echo=FALSE}
+output = list()
+dosage = c(.5,1,2)
+j = 1
+for(i in dosage){
+  ttest = t.test(len~supp,data=TG,subset= dose == i, var.equal = FALSE)
+  output[[j]] = as.data.frame(c(ttest$statistic, ttest$p.value, ttest$conf, ttest$estimate))
+  j = j+1
+}
+data = do.call(cbind,output)
+rownames(data) = c("t-stat", "p-val", "CI (lower bound)", "CI (upper bound)", "mean (OJ)", "mean (VC)")
+colnames(data) <- c("0.5mg Vitamin C", "1.0mg Vitamin C", "2.0mg Vitamin C")
+data
+```
+
+## Conclusion
+
+We see from the table that at 0.5 and 1 mg dosage, the delivery method significantly impacts the tooth growth rate. We can make this claim because the p-values are .006 and .001 respectively. We then reject the null hypothesis and conclude that there is a significant difference on tooth growth based on the delivery method.
+
+We also can observe that at 2 mg dosage, the delivery method doesn't significantly impact the tooth growth. This means that at a certain amount of Vitamin C intake tooth growth will not be impacted by the delivery method. We can make this claim because the p-value is .964 and thus we fail to reject the null, stating that there is not enough evidence to show that there is a significant difference in tooth growth from taking vitamin C through orange juice or ascorbic acid at 2 mg of dosage. 
+
+
+
+
+
+
+
+
